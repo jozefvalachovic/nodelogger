@@ -1,3 +1,4 @@
+import type * as React from "react";
 import { Logger } from "./logger";
 import { LogLevel } from "./levels";
 import type { LoggerConfig } from "./config";
@@ -256,17 +257,18 @@ export function wrapAsync<F extends AsyncFunction>(
 }
 
 /**
- * React component type
+ * React component type - properly typed for JSX compatibility
  */
-type ReactComponent<P = Record<string, unknown>> = (props: P) => unknown;
+type ReactNode = React.ReactNode;
+type ComponentType<P> = (props: P) => ReactNode;
 
 /**
  * Wrap a React component (client or server) with prop logging
  */
-export function wrapComponent<P extends Record<string, unknown>>(
-  Component: ReactComponent<P>,
+export function wrapComponent<P extends Record<string, unknown>, C extends ComponentType<P>>(
+  Component: C,
   options: WrapperOptions<P> | keyof P | (keyof P)[] = {},
-): ReactComponent<P> {
+): C {
   // Normalize options
   let opts: WrapperOptions<P>;
   if (typeof options === "string") {
@@ -284,7 +286,7 @@ export function wrapComponent<P extends Record<string, unknown>>(
   // Track render counts
   const renderCounts = new Map<string, number>();
 
-  const WrappedComponent = function (props: P) {
+  const WrappedComponent = function (props: P): ReactNode {
     if (!shouldLogForLevel(opts as WrapperOptions, config)) {
       return Component(props);
     }
@@ -311,10 +313,10 @@ export function wrapComponent<P extends Record<string, unknown>>(
     log.debug(`[${componentName}] render`, safeData);
 
     return Component(props);
-  };
+  } as C;
 
   // Preserve component name for React DevTools
-  WrappedComponent.displayName = `Logged(${componentName})`;
+  (WrappedComponent as unknown as { displayName: string }).displayName = `Logged(${componentName})`;
   Object.defineProperty(WrappedComponent, "name", {
     value: componentName,
     configurable: true,

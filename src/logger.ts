@@ -184,12 +184,22 @@ export class Logger {
   /**
    * Write log output
    */
-  private write(formatted: string): void {
+  private write(formatted: string, level?: LogLevel): void {
     const output = this.config.output;
 
-    // In browser, use console
+    // In browser, use appropriate console method
     if (isBrowser) {
-      console.log(formatted);
+      if (level === LogLevel.ERROR) {
+        console.error(formatted);
+      } else if (level === LogLevel.WARN) {
+        console.warn(formatted);
+      } else if (level === LogLevel.DEBUG || level === LogLevel.TRACE) {
+        console.debug(formatted);
+      } else if (level === LogLevel.INFO || level === LogLevel.NOTICE) {
+        console.info(formatted);
+      } else {
+        console.log(formatted);
+      }
       return;
     }
 

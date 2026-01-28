@@ -78,10 +78,31 @@ const isBrowser = typeof window !== "undefined";
 const isStdoutTTY = !isBrowser && typeof process !== "undefined" && process.stdout?.isTTY === true;
 
 /**
+ * Get the log level from environment variables
+ * In browser: check NEXT_PUBLIC_LOG_LEVEL (Next.js) or window.LOG_LEVEL
+ * In Node.js: check LOG_LEVEL
+ */
+function getLogLevelFromEnv(): string | undefined {
+  if (isBrowser) {
+    // Next.js client-side: NEXT_PUBLIC_ prefix is required
+    // Also check window for runtime configuration
+    return (
+      (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_LOG_LEVEL) ||
+      (window as unknown as Record<string, string>).LOG_LEVEL ||
+      undefined
+    );
+  }
+  // Node.js: check both for flexibility
+  return typeof process !== "undefined"
+    ? process.env?.LOG_LEVEL || process.env?.NEXT_PUBLIC_LOG_LEVEL
+    : undefined;
+}
+
+/**
  * Default configuration
  */
 export const defaultConfig: LoggerConfig = {
-  level: parseLogLevel(typeof process !== "undefined" ? process.env?.LOG_LEVEL : undefined),
+  level: parseLogLevel(getLogLevelFromEnv()),
   output: "stdout",
   colorize:
     !isBrowser &&
