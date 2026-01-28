@@ -275,7 +275,7 @@ export async function exportEntries(
       content = entries.map((e) => JSON.stringify(e)).join("\n") + "\n";
       break;
 
-    case ExportFormat.CSV:
+    case ExportFormat.CSV: {
       const headers = [
         "id",
         "timestamp",
@@ -301,6 +301,7 @@ export async function exportEntries(
         "\n" +
         rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
       break;
+    }
 
     default:
       throw new Error(`Unknown export format: ${format}`);

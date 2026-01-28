@@ -129,11 +129,8 @@ export function expressMiddleware(config: ExpressMiddlewareConfig = {}): Request
     };
 
     // Override end to log on completion
-    res.end = function (
-      chunk?: unknown,
-      encoding?: BufferEncoding | (() => void),
-      callback?: () => void,
-    ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    res.end = function (this: Response, ...args: any[]): Response {
       const durationMs = performance.now() - startTime;
       const statusCode = res.statusCode;
 
@@ -175,12 +172,9 @@ export function expressMiddleware(config: ExpressMiddlewareConfig = {}): Request
         });
       }
 
-      // Call original end with proper type handling
-      if (typeof encoding === "function") {
-        // encoding is actually the callback
-        return (originalEnd as Function).call(this, chunk, encoding);
-      }
-      return (originalEnd as Function).call(this, chunk, encoding, callback);
+      // Call original end - use type assertion for complex overloads
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (originalEnd as any).apply(this, args);
     };
 
     next();

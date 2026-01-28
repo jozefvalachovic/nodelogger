@@ -58,7 +58,7 @@ export function useLoggedState<T>(
         renderCount: renderCount.current,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   // Wrapped setter that logs changes
@@ -130,7 +130,7 @@ export function useLoggedEffect(
     }
 
     return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, deps);
 }
 
@@ -169,7 +169,7 @@ export function useLoggedCallback<T extends (...args: unknown[]) => unknown>(
       }
       return callback(...args);
     }) as T,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     deps,
   );
 }
@@ -210,7 +210,7 @@ export function useLoggedMemo<T>(
     }
 
     return factory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, deps);
 }
 
@@ -269,7 +269,7 @@ export function useLifecycleLog(componentName: string, options: LoggedHookOption
     }
 
     return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 }
 
@@ -287,7 +287,7 @@ export function useLogger(componentName: string, context: Record<string, unknown
 
   return useMemo(
     () => log.child({ component: componentName, ...context }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [componentName, ...Object.values(context)],
   );
 }

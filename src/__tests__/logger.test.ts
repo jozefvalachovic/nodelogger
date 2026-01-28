@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { Logger, logger, ChildLogger } from "../logger";
+import { Logger, logger } from "../logger";
 import { LogLevel } from "../levels";
 
 /**
