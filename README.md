@@ -41,6 +41,25 @@ yarn add nodelogger
 pnpm add nodelogger
 ```
 
+### Installing from GitHub
+
+```bash
+# npm
+npm install github:jozefvalachovic/nodelogger
+
+# pnpm
+pnpm add github:jozefvalachovic/nodelogger
+```
+
+### pnpm Workspaces / Turborepo
+
+When using pnpm workspaces, add the package to `onlyBuiltDependencies` in your `pnpm-workspace.yaml` to allow the build script to run:
+
+```yaml
+onlyBuiltDependencies:
+  - "nodelogger"
+```
+
 ## Quick Start
 
 ### Basic Logging

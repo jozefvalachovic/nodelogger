@@ -68,12 +68,25 @@ export interface LoggerConfig {
 }
 
 /**
+ * Check if we're running in a browser environment
+ */
+const isBrowser = typeof window !== "undefined";
+
+/**
+ * Check if stdout is a TTY (safe for browser)
+ */
+const isStdoutTTY = !isBrowser && typeof process !== "undefined" && process.stdout?.isTTY === true;
+
+/**
  * Default configuration
  */
 export const defaultConfig: LoggerConfig = {
-  level: parseLogLevel(process.env.LOG_LEVEL),
+  level: parseLogLevel(typeof process !== "undefined" ? process.env?.LOG_LEVEL : undefined),
   output: "stdout",
-  colorize: process.env.NODE_ENV !== "production" && process.stdout.isTTY === true,
+  colorize:
+    !isBrowser &&
+    (typeof process !== "undefined" ? process.env?.NODE_ENV !== "production" : true) &&
+    isStdoutTTY,
   timeFormat: "short",
   redactKeys: ["password", "token", "secret", "apiKey", "api_key", "authorization"],
   redactMask: "[REDACTED]",
@@ -84,9 +97,9 @@ export const defaultConfig: LoggerConfig = {
   batchMaxSize: 100,
   enableMetrics: false,
   metricsPrefix: "nodelogger",
-  includeLocation: process.env.NODE_ENV !== "production",
+  includeLocation: typeof process !== "undefined" ? process.env?.NODE_ENV !== "production" : true,
   customFields: {},
-  prettyPrint: process.env.NODE_ENV !== "production",
+  prettyPrint: typeof process !== "undefined" ? process.env?.NODE_ENV !== "production" : true,
   indentSize: 2,
   logRenderCount: false,
   logSuspenseBoundaries: false,
@@ -111,6 +124,10 @@ export function mergeConfig(config: PartialConfig): LoggerConfig {
  * Create configuration from environment variables
  */
 export function configFromEnv(): PartialConfig {
+  if (isBrowser || typeof process === "undefined") {
+    return {};
+  }
+
   const env = process.env;
 
   return {

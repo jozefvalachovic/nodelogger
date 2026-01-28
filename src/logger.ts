@@ -3,6 +3,11 @@ import { LoggerConfig, mergeConfig, PartialConfig } from "./config";
 import { formatLogLine } from "./formatter";
 
 /**
+ * Check if we're running in a browser environment
+ */
+const isBrowser = typeof window !== "undefined";
+
+/**
  * Log entry for batch processing
  */
 interface LogEntry {
@@ -59,9 +64,12 @@ export class Logger {
       }
     };
 
-    process.on("beforeExit", cleanup);
-    process.on("SIGINT", cleanup);
-    process.on("SIGTERM", cleanup);
+    // Only set up process handlers in Node.js environment
+    if (!isBrowser && typeof process !== "undefined") {
+      process.on("beforeExit", cleanup);
+      process.on("SIGINT", cleanup);
+      process.on("SIGTERM", cleanup);
+    }
   }
 
   /**
@@ -179,6 +187,12 @@ export class Logger {
   private write(formatted: string): void {
     const output = this.config.output;
 
+    // In browser, use console
+    if (isBrowser) {
+      console.log(formatted);
+      return;
+    }
+
     if (output === "stdout" || output === "json") {
       process.stdout.write(formatted + "\n");
     } else if (output === "stderr") {
@@ -262,7 +276,11 @@ export class Logger {
         // Store failed entry for potential retry or error reporting
         failedEntries.push(entry);
         // Log to stderr as fallback
-        if (process.stderr.writable) {
+        if (isBrowser) {
+          console.error(
+            `[nodelogger] Failed to flush log entry: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        } else if (typeof process !== "undefined" && process.stderr?.writable) {
           process.stderr.write(
             `[nodelogger] Failed to flush log entry: ${error instanceof Error ? error.message : String(error)}\n`,
           );
