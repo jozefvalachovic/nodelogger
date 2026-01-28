@@ -16,8 +16,8 @@ export interface WrapperOptions<T = unknown> {
   /** Log all props */
   logAllProps?: boolean;
 
-  /** Names of function arguments to log (for multi-argument functions). Use null to skip an arg */
-  logArgs?: (string | null)[];
+  /** Log all function arguments (as arg0, arg1, etc.) */
+  logArgs?: boolean;
 
   /** Log the return value */
   logReturn?: boolean;
@@ -84,20 +84,15 @@ function extractLogProps<T extends Record<string, unknown>>(
 /**
  * Internal: extract function arguments to log
  */
-function extractArgsToLog(args: unknown[], options: WrapperOptions): Record<string, unknown> {
-  if (!options.logArgs || options.logArgs.length === 0) {
+function extractArgsToLog(args: unknown[]): Record<string, unknown> {
+  if (args.length === 0) {
     return {};
   }
 
   const result: Record<string, unknown> = {};
 
-  // Log arguments by position, using provided names
-  // Use null/undefined to skip an argument
-  for (let i = 0; i < Math.min(args.length, options.logArgs.length); i++) {
-    const name = options.logArgs[i];
-    if (name !== null && name !== undefined && name !== "") {
-      result[name] = args[i];
-    }
+  for (let i = 0; i < args.length; i++) {
+    result[`arg${i}`] = args[i];
   }
 
   return result;
@@ -167,9 +162,9 @@ export function wrapFunction<F extends AnyFunction>(
     // Extract data to log - support both single object props and multiple args
     let dataToLog: Record<string, unknown> = {};
 
-    if (opts.logArgs && opts.logArgs.length > 0) {
-      // Multi-argument mode
-      dataToLog = extractArgsToLog(args, opts);
+    if (opts.logArgs) {
+      // Log all arguments
+      dataToLog = extractArgsToLog(args);
     } else if (opts.logAllProps || opts.logProps) {
       // Single object argument mode (React-style props)
       const propsArg = args[0];
@@ -248,9 +243,9 @@ export function wrapAsync<F extends AsyncFunction>(
     // Extract data to log - support both single object props and multiple args
     let dataToLog: Record<string, unknown> = {};
 
-    if (opts.logArgs && opts.logArgs.length > 0) {
-      // Multi-argument mode
-      dataToLog = extractArgsToLog(args, opts);
+    if (opts.logArgs) {
+      // Log all arguments
+      dataToLog = extractArgsToLog(args);
     } else if (opts.logAllProps || opts.logProps) {
       // Single object argument mode (React-style props)
       const propsArg = args[0];
