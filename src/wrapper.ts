@@ -10,17 +10,14 @@ export interface WrapperOptions<T = unknown> {
   /** Log level for this wrapper */
   level?: LogLevel | LogLevel[];
 
-  /** Specific props/arguments to log (by name or index) - for single object argument */
+  /** Specific props to log (by name or index) - for single object argument (React components) */
   logProps?: (keyof T | string | number)[];
 
-  /** Log all props/arguments */
+  /** Log all props */
   logAllProps?: boolean;
 
-  /** Log all function arguments (for multi-argument functions) */
-  logArgs?: boolean;
-
-  /** Names for function arguments (for cleaner output with multi-arg functions) */
-  argNames?: string[];
+  /** Names of function arguments to log (for multi-argument functions) */
+  logArgs?: string[];
 
   /** Log the return value */
   logReturn?: boolean;
@@ -88,34 +85,17 @@ function extractLogProps<T extends Record<string, unknown>>(
  * Internal: extract function arguments to log
  */
 function extractArgsToLog(args: unknown[], options: WrapperOptions): Record<string, unknown> {
-  if (!options.logArgs && !options.logAllProps) {
+  if (!options.logArgs || options.logArgs.length === 0) {
     return {};
   }
 
-  // If argNames provided, use them
-  if (options.argNames && options.argNames.length > 0) {
-    const result: Record<string, unknown> = {};
-    for (let i = 0; i < Math.min(args.length, options.argNames.length); i++) {
-      result[options.argNames[i]] = args[i];
-    }
-    return result;
-  }
-
-  // Otherwise use index-based naming
-  if (args.length === 1) {
-    // Single argument - return it directly if it's an object, otherwise wrap it
-    const arg = args[0];
-    if (arg && typeof arg === "object" && !Array.isArray(arg)) {
-      return arg as Record<string, unknown>;
-    }
-    return { arg0: arg };
-  }
-
-  // Multiple arguments - use arg0, arg1, etc.
   const result: Record<string, unknown> = {};
-  for (let i = 0; i < args.length; i++) {
-    result[`arg${i}`] = args[i];
+
+  // Log arguments by position, using provided names
+  for (let i = 0; i < Math.min(args.length, options.logArgs.length); i++) {
+    result[options.logArgs[i]] = args[i];
   }
+
   return result;
 }
 
@@ -183,9 +163,9 @@ export function wrapFunction<F extends AnyFunction>(
     // Extract data to log - support both single object props and multiple args
     let dataToLog: Record<string, unknown> = {};
 
-    if (opts.logArgs || opts.argNames) {
+    if (opts.logArgs && opts.logArgs.length > 0) {
       // Multi-argument mode
-      dataToLog = extractArgsToLog(args, { ...opts, logArgs: true });
+      dataToLog = extractArgsToLog(args, opts);
     } else if (opts.logAllProps || opts.logProps) {
       // Single object argument mode (React-style props)
       const propsArg = args[0];
@@ -264,9 +244,9 @@ export function wrapAsync<F extends AsyncFunction>(
     // Extract data to log - support both single object props and multiple args
     let dataToLog: Record<string, unknown> = {};
 
-    if (opts.logArgs || opts.argNames) {
+    if (opts.logArgs && opts.logArgs.length > 0) {
       // Multi-argument mode
-      dataToLog = extractArgsToLog(args, { ...opts, logArgs: true });
+      dataToLog = extractArgsToLog(args, opts);
     } else if (opts.logAllProps || opts.logProps) {
       // Single object argument mode (React-style props)
       const propsArg = args[0];
