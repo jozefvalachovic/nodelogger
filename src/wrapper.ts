@@ -16,8 +16,8 @@ export interface WrapperOptions<T = unknown> {
   /** Log all props */
   logAllProps?: boolean;
 
-  /** Names of function arguments to log (for multi-argument functions) */
-  logArgs?: string[];
+  /** Names of function arguments to log (for multi-argument functions). Use null to skip an arg */
+  logArgs?: (string | null)[];
 
   /** Log the return value */
   logReturn?: boolean;
@@ -92,8 +92,12 @@ function extractArgsToLog(args: unknown[], options: WrapperOptions): Record<stri
   const result: Record<string, unknown> = {};
 
   // Log arguments by position, using provided names
+  // Use null/undefined to skip an argument
   for (let i = 0; i < Math.min(args.length, options.logArgs.length); i++) {
-    result[options.logArgs[i]] = args[i];
+    const name = options.logArgs[i];
+    if (name !== null && name !== undefined && name !== "") {
+      result[name] = args[i];
+    }
   }
 
   return result;
